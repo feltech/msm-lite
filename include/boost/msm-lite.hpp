@@ -853,9 +853,9 @@ struct transition<state<S1>, state<S2>, event<E>, G, A> {
   template <class SM>
   auto execute(SM &self, const E &event, aux::byte &current_state) BOOST_MSM_LITE_NOEXCEPT_IF(SM::is_noexcept) {
     if (call(g, event, self.deps_, self)) {
-      call(a, event, self.deps_, self);
       self.template update_current_state<typename state<S1>::explicit_states>(
           current_state, aux::get_id<typename SM::states_ids_t, -1, dst_state>(), state<src_state>{}, state<dst_state>{});
+      call(a, event, self.deps_, self);
       return true;
     }
     return false;
@@ -879,9 +879,9 @@ struct transition<state<S1>, state<S2>, event<E>, always, A> {
 
   template <class SM>
   auto execute(SM &self, const E &event, aux::byte &current_state) BOOST_MSM_LITE_NOEXCEPT_IF(SM::is_noexcept) {
-    call(a, event, self.deps_, self);
     self.template update_current_state<typename state<S1>::explicit_states>(
         current_state, aux::get_id<typename SM::states_ids_t, -1, dst_state>(), state<src_state>{}, state<dst_state>{});
+    call(a, event, self.deps_, self);
     return true;
   }
 
@@ -1161,9 +1161,11 @@ class sm {
   bool process_event(const TEvent &event) BOOST_MSM_LITE_NOEXCEPT_IF(is_noexcept) {
     BOOST_MSM_LITE_LOG(process_event, SM, event);
 #if defined(__cpp_exceptions) || defined(__EXCEPTIONS)
-    return process_event_noexcept(event, aux::integral_constant<bool, is_noexcept>{});
+    return process_event_noexcept(event, aux::integral_constant<bool, is_noexcept>{})
+        ? process_internal_event(anonymous{}) : false;
 #else
-    return process_event_impl<get_event_mapping_t<TEvent, mappings_t>>(event, states_t{}, aux::make_index_sequence<regions>{});
+    return process_event_impl<get_event_mapping_t<TEvent, mappings_t>>(event, states_t{}, aux::make_index_sequence<regions>{})
+        ? process_internal_event(anonymous{}) : false;
 #endif
   }
 
