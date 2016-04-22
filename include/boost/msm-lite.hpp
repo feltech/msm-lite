@@ -1465,7 +1465,7 @@ auto operator""_t() BOOST_MSM_LITE_NOEXCEPT {
 #endif
 detail::state<detail::terminate_state> X;
 detail::history_state H;
-detail::process_event process_event;
+detail::process_event queue_event;
 template <class... Ts, BOOST_MSM_LITE_REQUIRES(aux::is_same<aux::bool_list<aux::always<Ts>::value...>,
                                                             aux::bool_list<concepts::transitional<Ts>::value...>>::value)>
 auto make_transition_table(Ts... ts) BOOST_MSM_LITE_NOEXCEPT {
