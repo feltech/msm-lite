@@ -1143,9 +1143,9 @@ class sm {
   static constexpr auto is_noexcept = BOOST_MSM_LITE_NOEXCEPT_IF(aux::declval<SM>().configure());
 #endif
 
-  sm(sm &&) BOOST_MSM_LITE_NOEXCEPT = default;
-  sm(const sm &) BOOST_MSM_LITE_NOEXCEPT = delete;
-  sm &operator=(const sm &) BOOST_MSM_LITE_NOEXCEPT = delete;
+  sm(sm &&) = default;
+  sm(const sm &) = delete;
+  sm &operator=(const sm &) = delete;
 
   template <class... TDeps, BOOST_MSM_LITE_REQUIRES(dependable<TDeps...>::value)>
   explicit sm(TDeps &&... deps) BOOST_MSM_LITE_NOEXCEPT : deps_{aux::init{}, aux::pool<TDeps...>{deps...}},
