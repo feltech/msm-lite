@@ -402,7 +402,12 @@ struct fsm {
 };
 struct _ {};
 struct operator_base {};
-struct internal_event {};
+struct internal_event
+{
+	static auto c_str() BOOST_MSM_LITE_NOEXCEPT {
+		return "internal_event";
+	}
+};
 struct anonymous : internal_event {};
 struct on_entry : internal_event {};
 struct on_exit : internal_event {};
