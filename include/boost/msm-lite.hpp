@@ -379,6 +379,11 @@ template <class T, class... TEvents>
 struct dispatchable<T, aux::type_list<TEvents...>>
     : aux::is_same<aux::bool_list<aux::always<TEvents>::value...>,
                    aux::bool_list<decltype(dispatchable_impl<T>(aux::declval<TEvents>()))::value...>> {};
+template<class T, class = decltype(T::c_str())>
+std::true_type  test_stringable(const T&);
+std::false_type test_stringable(...);
+template<class T>
+using stringable = decltype(test_stringable(std::declval<T>()));
 }  // concepts
 namespace detail {
 template <class...>
@@ -404,13 +409,25 @@ struct _ {};
 struct operator_base {};
 struct internal_event
 {
-	static auto c_str() BOOST_MSM_LITE_NOEXCEPT {
-		return "internal_event";
-	}
+  static auto c_str() BOOST_MSM_LITE_NOEXCEPT {
+    return "internal_event";
+  }
 };
-struct anonymous : internal_event {};
-struct on_entry : internal_event {};
-struct on_exit : internal_event {};
+struct anonymous : internal_event {
+  static auto c_str() BOOST_MSM_LITE_NOEXCEPT {
+    return "anonymous";
+  }
+};
+struct on_entry : internal_event {
+  static auto c_str() BOOST_MSM_LITE_NOEXCEPT {
+    return "on_entry";
+  }
+};
+struct on_exit : internal_event {
+  static auto c_str() BOOST_MSM_LITE_NOEXCEPT {
+    return "on_exit";
+  }
+};
 struct always {
   auto operator()() const BOOST_MSM_LITE_NOEXCEPT { return true; }
 };
@@ -466,18 +483,28 @@ struct terminate_state {};
 struct history_state {};
 template <class>
 struct state;
-template <class>
+template <class S>
+class stringable {};
+template <class TState>
+struct stringable<state<TState>> {
+  static constexpr bool value = concepts::stringable<TState>::value;
+};
+template <class S, bool StringOverride=stringable<S>::value>
 struct state_str {
   static auto c_str() BOOST_MSM_LITE_NOEXCEPT { return __PRETTY_FUNCTION__; }
+};
+template <class S>
+struct state_str<S, true> {
+  static auto c_str() BOOST_MSM_LITE_NOEXCEPT { return S::type::c_str(); }
 };
 template <>
 struct state_str<state<terminate_state>> {
   static auto c_str() BOOST_MSM_LITE_NOEXCEPT { return "terminate"; }
 };
 template <char... Chrs>
-struct state_str<state<aux::string<Chrs...>>> : aux::string<Chrs...> {};
+struct state_str<state<aux::string<Chrs...>>, false> : aux::string<Chrs...> {};
 template <char... Chrs, class T>
-struct state_str<state<aux::string<Chrs...>(T)>> : state_str<state<aux::string<Chrs...>>> {};
+struct state_str<state<aux::string<Chrs...>(T)>, false> : state_str<state<aux::string<Chrs...>>> {};
 template <class TState>
 struct state_impl : state_str<TState> {
   using explicit_states = aux::type_list<>;
