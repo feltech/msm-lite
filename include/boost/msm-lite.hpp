@@ -379,11 +379,17 @@ template <class T, class... TEvents>
 struct dispatchable<T, aux::type_list<TEvents...>>
     : aux::is_same<aux::bool_list<aux::always<TEvents>::value...>,
                    aux::bool_list<decltype(dispatchable_impl<T>(aux::declval<TEvents>()))::value...>> {};
+
 template<class T, class = decltype(T::c_str())>
 std::true_type  test_stringable(const T&);
 std::false_type test_stringable(...);
-template<class T>
-using stringable = decltype(test_stringable(std::declval<T>()));
+template <class T, class = void>
+struct stringable : std::false_type
+{};
+template <class T>
+struct stringable< T, decltype(void(sizeof(T))) > : decltype(test_stringable(std::declval<T>()))
+{};
+
 }  // concepts
 namespace detail {
 template <class...>
